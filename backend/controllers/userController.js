@@ -68,7 +68,7 @@ const registerUser = asyncHandler(
 
 // Login User
 
-const  LoginUser = asyncHandler(
+const  loginUser = asyncHandler(
     async(req, res ) => {
         const {email, password} = req.body
 
@@ -116,7 +116,23 @@ const  LoginUser = asyncHandler(
     }
 )
 
+const logOutUser = asyncHandler(
+    async( req, res) => {
+        // expire the cookie time
+        res.cookie("token", "", {
+            path:"/",
+            httpOnly: true,
+            expires: new Date(0),  // 1 day
+            secure: true,
+            sameSite: "none"
+        })
+
+        return res.status(200).json({message: "Successfully Logged Out"})
+    }
+)
+
 module.exports =  {
     registerUser,
-    LoginUser
+    loginUser,
+    logOutUser
 }
