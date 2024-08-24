@@ -84,20 +84,25 @@ const  LoginUser = asyncHandler(
         if (!user) {
             throw new Error("User not found, Please sign up")
         }
-
-        const  token = generateToken(user._id)
-
-        //Send HTTP-only cookie 
-        res.cookie("token", token, {
-            path:"/",
-            httpOnly: true,
-            expires: new Date(Date.now() + 1000 * 86400),  // 1 day
-            secure: true,
-            sameSite: "none"
-        })
+        
         //  User exists check if password is correct
         
         const passwordIsCorrect = await bcrypt.compare(password, user.password)
+        
+        //Send HTTP-only cookie 
+        
+        const  token = generateToken(user._id)
+        if(passwordIsCorrect) {
+            
+            res.cookie("token", token, {
+                path:"/",
+                httpOnly: true,
+                expires: new Date(Date.now() + 1000 * 86400),  // 1 day
+                secure: true,
+                sameSite: "none"
+            })
+        }
+
 
         if ( user && passwordIsCorrect) {
             const {_id, name, email, photo, phone, bio} = user
