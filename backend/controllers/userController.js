@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler")
 const User = require("../models/userModel")
 const jwt = require("jsonwebtoken")
+const bcrypt = require("bcryptjs")
 
 const generateToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: "1d"})
@@ -69,7 +70,44 @@ const registerUser = asyncHandler(
 
 const  LoginUser = asyncHandler(
     async(req, res ) => {
-        res.send("login user")
+        const {email, password} = req.body
+
+        // validate Request
+        if(!email  || !password) {
+            res.status(400)
+            throw new Error("Please Add email and pasword")
+        }
+
+        // check if user exists
+
+        const user = await User.findOne({email})
+        if (!user) {
+            throw new Error("User not found, Please sign up")
+        }
+
+        const  token = generateToken(user._id)
+
+        //Send HTTP-only cookie 
+        res.cookie("token", token, {
+            path:"/",
+            httpOnly: true,
+            expires: new Date(Date.now() + 1000 * 86400),  // 1 day
+            secure: true,
+            sameSite: "none"
+        })
+        //  User exists check if password is correct
+        
+        const passwordIsCorrect = await bcrypt.compare(password, user.password)
+
+        if ( user && passwordIsCorrect) {
+            const {_id, name, email, photo, phone, bio} = user
+            res.status(201).json({
+                _id, name, email, photo, phone, bio, token
+            })
+        }
+        else {
+            throw new Error("Invalid Credentials")
+        }
     }
 )
 
