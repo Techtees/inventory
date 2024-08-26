@@ -147,7 +147,11 @@ const getUser = asyncHandler(
     }
 )
 
+const loginStatus = asyncHandler(
+    async (req, res) => {
 
+    }
+)
 
 module.exports =  {
     registerUser,
