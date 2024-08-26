@@ -166,10 +166,17 @@ const loginStatus = asyncHandler(
     }
 )
 
+const updateUser = asyncHandler(
+    async(req, res) => {
+        res.send('user Updated')
+    }
+)
+
 module.exports =  {
     registerUser,
     loginUser,
     logOutUser,
     getUser,
     loginStatus,
+    updateUser,
 }
