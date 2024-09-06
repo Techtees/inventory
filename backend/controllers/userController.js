@@ -2,6 +2,9 @@ const asyncHandler = require("express-async-handler")
 const User = require("../models/userModel")
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcryptjs")
+const Token =  require("../models/tokenModel")
+const crypto = require("crypto")
+const sendEmail = require("../utils/sendEmail")
 
 const generateToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: "1d"})
@@ -235,7 +238,63 @@ const changePassword = asyncHandler(
 
 const forgotPassword = asyncHandler(
     async (req,res) => {
-        res.send("forgot passord")
+         const {email} = req.body
+
+         const user = await User.findOne({ email })
+
+         if(!user) {
+            res.status(404)
+            throw new Error("User does not exist")
+         }
+
+        //  delete token if it exist in the db
+        let token = await Token.findOne({userId: user._id})
+        if(token) {
+            await token.deleteOne()
+        }
+        //  Ceate Reset  Token
+        let resetToken = crypto.randomBytes(32).toString("hex") + user._id
+
+        // hash token before saving to DB
+        const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+        // save to db
+
+        await new Token({
+            userId: user._id,
+            token: hashedToken,
+            createdAt: Date.now(),
+            expiresAt: Date.now() + 30 + (60 * 1000) //thirty minutes
+        }).save()
+
+        // construct  Reset URL
+        const resetURL = `${process.env.WEB_URL}/resetpassword/${resetToken}`
+
+        //  Reset Email 
+        const message = ` 
+        <h2>${user.name} </h2>
+        <p> Please use the url below to reset your password</p>
+        <a href=${resetURL} clicktracking=off> ${resetURL}</a>
+        <p> Regards </p>
+        `
+
+        const subject = "Passsword Reset Request"
+        const send_to = user.email
+        const sent_from = process.env.EMAIL_USER
+
+        try {
+            await sendEmail(subject,message,send_to, sent_from)
+            res.status(200).json({sucess:true, message:"Reser email snet"})
+        } catch (error) {
+            res.status(500)
+            console.log(error)
+            throw new Error("Email not sent")
+
+        }
+        
+     res.send("forgot password")
+        
+
     }
 )
 
