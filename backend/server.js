@@ -1,3 +1,4 @@
+
 const dotenv = require("dotenv").config()
 const express = require("express")
 const mongoose = require("mongoose")
@@ -6,10 +7,13 @@ const colors = require("colors")
 const cors = require("cors");
 
 const userRoute = require("./routes/userRoute") 
+const productRoute = require("./routes/productRoute")
 const errorHandler = require("./middleWare/errorMiddleWare")
 const  cookieParser = require("cookie-parser")
+const path = require("path")
 
 const app  = express()
+
 
 // app.use(colors)
 
@@ -21,8 +25,11 @@ app.use(cookieParser())
 app.use(express.urlencoded({extended: false}))
 app.use(bodyParser.json())
 
+app.use("uploads", express.static(path.join(__dirname, "uploads")))
+
 // Route Middleware
 app.use("/api/users", userRoute)
+app.use("/api/products", productRoute)
 
 // Routes
 app.get("/", (req, res) => {
