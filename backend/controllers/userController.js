@@ -55,7 +55,7 @@ const registerUser = asyncHandler(
             sameSite: "none"
         })
         if(user) {
-            const {_id, name, email, photo, phone, bio} = user
+            const {_id, name, email, photo, phone, bio} = 
             res.status(201).json({
                 _id, name, email, photo, phone, bio, token
             })
