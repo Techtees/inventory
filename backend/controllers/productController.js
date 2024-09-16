@@ -1,5 +1,7 @@
 const asyncHandler = require("express-async-handler")
 const Product = require("../models/productModel")
+const {fileSizeFormatter} = require("../utils/fileUpload")
+
 
 
 const createProduct = asyncHandler(
@@ -12,6 +14,17 @@ const createProduct = asyncHandler(
             throw new Error ("Please fill ina all fields")
         }
 
+        // handle image upload
+        let fileData = {}
+        if(req.file) {
+            fileData = {
+                fileName: req.file.originalname,
+                filePath: req.file.path,
+                fileType: req.file.mimetype,
+                fileSize :fileSizeFormatter(req.file.size, 2)
+            }
+        }
+
         const product = await Product.create({
             user: req.user.id,
             name,
@@ -19,7 +32,8 @@ const createProduct = asyncHandler(
             category,
             quantity,
             price,
-            description
+            description,
+            image: fileData
         })
 
         res.status(201).json(product)
